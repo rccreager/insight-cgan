@@ -95,13 +95,10 @@ D_real, D_logit_real = discriminator(X)
 D_fake, D_logit_fake = discriminator(G_sample)
 #D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_real, labels=tf.ones_like(D_logit_real)))
 #D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_fake, labels=tf.zeros_like(D_logit_fake)))
-D_loss_real = tf.contrib.gan.losses.wargs.modified_discriminator_loss(D_real, D_fake)
-D_loss_fake = tf.contrib.gan.losses.wargs.modified_generator_loss(D_fake)
-
-
-D_loss = D_loss_real + D_loss_fake
-G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_fake, labels=tf.ones_like(D_logit_fake)))
-
+#D_loss = D_loss_real + D_loss_fake
+#G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_fake, labels=tf.ones_like(D_logit_fake)))
+D_loss = tf.contrib.gan.losses.wargs.modified_discriminator_loss(D_real, D_fake)
+G_loss = tf.contrib.gan.losses.wargs.modified_generator_loss(D_fake)
 D_solver = tf.compat.v1.train.GradientDescentOptimizer(0.05).minimize(D_loss, var_list=theta_D)
 G_solver = tf.compat.v1.train.AdamOptimizer().minimize(G_loss, var_list=theta_G)
 
