@@ -72,7 +72,7 @@ batch_size = 128
 
 ####################################################
 
-with tf.device("/gpu:0"):
+with tf.device("/job:localhost/replica:0/task:0/device:XLA_GPU:0"):
     #weights and biases for each discriminator layer
     D_W1 = tf.Variable(norm_init([img_size, batch_size]))
     D_b1 = tf.Variable(tf.zeros(shape=[batch_size]))
@@ -127,7 +127,7 @@ D_loss_list = []
 G_loss_list = []
 startTime = datetime.now()
 
-sess = tf.compat.v1.Session()
+sess = tf.compat.v1.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True))
 sess.run(tf.global_variables_initializer())
 
 for it in range(100000):
