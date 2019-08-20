@@ -7,3 +7,4 @@ python CGAN.py
 pip install matplotlib
 sudo apt-get install python-tk
 sudo apt install git-all
+sudo apt-get install pciutils
