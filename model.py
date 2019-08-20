@@ -65,10 +65,24 @@ class DCGAN():
     def build_discriminator(self):
         model = Sequential()
         
-        model.add(Conv2D(256, kernel_size=3, strides=2, input_shape=self.img_shape))
+        model.add(Conv2D(32, kernel_size=3, strides=2, input_shape=self.img_shape, padding="same"))
         model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
+        model.add(ZeroPadding2D(padding=((0,1),(0,1))))
+        model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(128, kernel_size=3, strides=2, padding="same"))
+        model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(256, kernel_size=3, strides=1, padding="same"))
+        model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
         model.add(Flatten())
-        model.add(Dense(1, activation='tanh'))
+        model.add(Dense(1, activation='sigmoid'))
 
         img = Input(shape=self.img_shape)
         validity = model(img)
@@ -82,7 +96,7 @@ class DCGAN():
         y = np.load(y_path, mmap_mode='r')
         x_train = x['arr_0']
         y_train = y['arr_0']
-        train_filter = np.where((y_train == 5))
+        train_filter = np.where((y_train == 3))
         x_train, y_train = x_train[train_filter], y_train[train_filter]
         x_train = x_train.astype('float32')
         x_train = x_train / 127.5 - 1.
@@ -107,16 +121,23 @@ class DCGAN():
             # Train the discriminator (real classified as ones and generated as zeros)
             d_loss_real = self.discriminator.train_on_batch(imgs, valid)
             d_loss_fake = self.discriminator.train_on_batch(gen_imgs, fake)
-            d_loss = np.add(d_loss_real, d_loss_fake)
+            d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
             # Train the generator (wants discriminator to mistake images as real)
             g_loss = self.combined.train_on_batch(noise, valid)
             # Plot the progress
+            D_loss_list.append(d_loss[0])
+            G_loss_list.append(g_loss)
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
 
             # If at save interval => save generated image samples
             if epoch % save_interval == 0:
                 print("Time taken:", datetime.now() - startTime)
                 self.save_imgs(epoch)
+
+        discrim = plt.plot(D_loss_list, label='Discrim Loss', c='r')
+        gen = plt.plot(G_loss_list, label='Gen Loss', c='b')
+        plt.legend()
+        plt.savefig("out/losses.png")            
 
     def save_imgs(self, epoch):
         r, c = 5, 5
