@@ -4,3 +4,4 @@ pip3 install numpy
 pip3 install tensorflow
 pip3 install matplotlib
 sudo apt-get --assume-yes install python-tk
+pip3 install tensorflow-gpu

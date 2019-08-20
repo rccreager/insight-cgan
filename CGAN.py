@@ -72,7 +72,8 @@ batch_size = 128
 
 ####################################################
 
-with tf.device("/job:localhost/replica:0/task:0/device:XLA_GPU:0"):
+#with tf.device("/job:localhost/replica:0/task:0/device:XLA_GPU:0"):
+with tf.device("/job:localhost/replica:0/task:0/device:CPU:0"):
     #weights and biases for each discriminator layer
     D_W1 = tf.Variable(norm_init([img_size, batch_size]))
     D_b1 = tf.Variable(tf.zeros(shape=[batch_size]))
