@@ -27,6 +27,10 @@ class DCGAN():
         self.img_rows = 28
         self.img_cols = 28
         self.channels = 1
+        self.gen_dropout = 0.25
+        self.discrim_dropout = 0.25
+        self.bn_momentum = 0.8
+        self.leaky_relu_alpha = 0.2
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
         self.latent_dim = 100
         optimizer = Adam(0.0002, 0.5)
@@ -48,15 +52,20 @@ class DCGAN():
         model.add(Dense(128 * 7 * 7, activation="relu", input_dim=self.latent_dim))
         model.add(Reshape((7, 7, 128)))
         model.add(UpSampling2D())
+        #model.add(Conv2DTranspose(1,8, strides=1))
         model.add(Conv2D(128, kernel_size=3, padding="same"))
-        model.add(BatchNormalization(momentum=0.8))
-        model.add(LeakyReLU(alpha=0.2))
+        model.add(BatchNormalization(momentum=self.bn_momentum))
+        model.add(Dropout(self.gen_dropout))
+        model.add(LeakyReLU(alpha=self.leaky_relu_alpha))
         model.add(UpSampling2D())
+        #model.add(Conv2DTranspose(1,15, strides=1))
         model.add(Conv2D(64, kernel_size=3, padding="same"))
-        model.add(BatchNormalization(momentum=0.8))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Conv2D(self.channels, kernel_size=3, padding="same"))
+        model.add(BatchNormalization(momentum=self.bn_momentum))
+        model.add(Dropout(self.gen_dropout))
+        model.add(LeakyReLU(alpha=self.leaky_relu_alpha))
+        model.add(Conv2D(self.channels, kernel_size=4, padding="same"))
         model.add(Activation("tanh"))
+        model.summary()
 
         noise = Input(shape=(self.latent_dim,))
         img = model(noise)
@@ -66,23 +75,24 @@ class DCGAN():
         model = Sequential()
         
         model.add(Conv2D(32, kernel_size=3, strides=2, input_shape=self.img_shape, padding="same"))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Dropout(0.25))
+        model.add(LeakyReLU(alpha=self.leaky_relu_alpha))
+        model.add(Dropout(self.discrim_dropout))
         model.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
-        model.add(ZeroPadding2D(padding=((0,1),(0,1))))
-        model.add(BatchNormalization(momentum=0.8))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Dropout(0.25))
+        model.add(ZeroPadding2D(padding=((0,1),(0,1)))) #pad at bottom right
+        model.add(BatchNormalization(momentum=self.bn_momentum))
+        model.add(Dropout(self.discrim_dropout))
+        model.add(LeakyReLU(alpha=self.leaky_relu_alpha))
         model.add(Conv2D(128, kernel_size=3, strides=2, padding="same"))
-        model.add(BatchNormalization(momentum=0.8))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Dropout(0.25))
+        model.add(BatchNormalization(momentum=self.bn_momentum))
+        model.add(Dropout(self.discrim_dropout))
+        model.add(LeakyReLU(alpha=self.leaky_relu_alpha))
         model.add(Conv2D(256, kernel_size=3, strides=1, padding="same"))
-        model.add(BatchNormalization(momentum=0.8))
-        model.add(LeakyReLU(alpha=0.2))
-        model.add(Dropout(0.25))
+        model.add(BatchNormalization(momentum=self.bn_momentum))
+        model.add(Dropout(self.discrim_dropout))
+        model.add(LeakyReLU(alpha=self.leaky_relu_alpha))
         model.add(Flatten())
         model.add(Dense(1, activation='sigmoid'))
+        model.summary()
 
         img = Input(shape=self.img_shape)
         validity = model(img)
@@ -96,7 +106,7 @@ class DCGAN():
         y = np.load(y_path, mmap_mode='r')
         x_train = x['arr_0']
         y_train = y['arr_0']
-        train_filter = np.where((y_train == 3))
+        train_filter = np.where((y_train == 5))
         x_train, y_train = x_train[train_filter], y_train[train_filter]
         x_train = x_train.astype('float32')
         x_train = x_train / 127.5 - 1.
